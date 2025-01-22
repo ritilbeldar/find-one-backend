@@ -24,13 +24,12 @@ exports.userRegister = catchAsyncErrors(async (req, res, next) => {
   try {
     const { email, username } = req.body;
     let user = await User.findOne({ email });
-    // generateUsername("", 3)
 
     if (user) {
       if (user.verified) {
         return res
           .status(400)
-          .json({ error: "This email is already registered." });
+          .json({ success: false, error: "This email is already registered." });
       } else {
         if (!user.username) {
           user.username = username;
@@ -43,12 +42,11 @@ exports.userRegister = catchAsyncErrors(async (req, res, next) => {
         await user.save();
         await otpSend(user.email, otp, user.username);
 
-        return res
-          .status(200)
-          .json({
-            success: "OTP sent for verification.",
-            UserName: user.username,
-          });
+        return res.status(200).json({
+          success: true,
+          message: "OTP sent for verification.",
+          UserName: user.username,
+        });
       }
     }
 
@@ -64,21 +62,21 @@ exports.userRegister = catchAsyncErrors(async (req, res, next) => {
     user.otp = otp;
     await user.save();
     await otpSend(user.email, otp, user.username);
-    console.log(user.username);
 
-    return res
-      .status(200)
-      .json({
-        success: "User data saved successfully. OTP sent for verification.",
-        UserName: user.username,
-      });
+    return res.status(200).json({
+      success: true,
+      message: "User data saved successfully. OTP sent for verification.",
+      UserName: user.username,
+    });
   } catch (error) {
     console.error(error);
-    return res
-      .status(500)
-      .json({ error: "Something went wrong. Please try again later." });
+    return res.status(500).json({
+      success: false,
+      error: "Something went wrong. Please try again later.",
+    });
   }
 });
+
 
 exports.otp_verify = catchAsyncErrors(async (req, res, next) => {
   try {
